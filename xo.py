@@ -22,15 +22,17 @@ def on_connect(client, userdata, flags, rc):
     # print("Connected with result code "+str(rc))
     client.subscribe("tictactoe/delegation")
     client.subscribe("tictactoe/move/+")
+    client.publish("tictactoe/request/delegation","join")
 
 def on_message(client, userdata, msg):
+    msg.payload = msg.payload.decode("utf-8")
     print(msg.topic+" "+str(msg.payload))
     if msg.topic == "tictactoe/move/0":
         print("Placing an X")
     elif msg.topic == "tictactoe/move/1":
         print("Placing an O")
     elif msg.topic == "tictactoe/delegation":
-        print("Got player id")
+        MY_PLAYER_ID = int(msg.payload)
     elif msg.topic == "tictactoe/victory":
         print(msg.payload)
 
@@ -80,20 +82,14 @@ def main(stdscr):
             key = stdscr.getch()
             if key == curses.KEY_UP or key == ord('w'):
                 y_pos = max(0, y_pos - 1)
-                print(x_pos)
-                print(y_pos)
             elif key == curses.KEY_DOWN or key == ord('s'):
                 y_pos = min(2, y_pos + 1)
-                print(x_pos)
-                print(y_pos)
             elif key == curses.KEY_LEFT or key == ord('a'):
                 x_pos = max(0, x_pos - 1)
                 print(x_pos)
                 print(y_pos)
             elif key == curses.KEY_RIGHT or key == ord('d'):
                 x_pos = min(2, x_pos + 1)
-                print(x_pos)
-                print(y_pos)
             elif key == ord('q') or key == ord('Q'):
                 break
             elif key == ord(' '):

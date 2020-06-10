@@ -3,7 +3,7 @@
 import paho.mqtt.client as mqtt
 
 
-def move()
+#def move()
 
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
@@ -17,7 +17,8 @@ def on_message(client, userdata, msg):
     elif msg.topic == "tictactoe/move/1":
         print("Placing an O")
     elif msg.topic == "tictactoe/request/delegation":
-        client.publish()
+        print("request/delegation")
+        client.publish("tictactoe/delegation", "1")
 
 
 client = mqtt.Client()
