@@ -85,7 +85,7 @@ def main(stdscr):
                 x = LAST_MOVE % 3 * 2
                 y = int(LAST_MOVE / 3) * 2
                 draw(Y_OFFSET + y, X_OFFSET + x, stdscr, opponent)
-                LAST_MOVE = 0
+                LAST_MOVE++
 
             #Move options
             key = stdscr.getch()
