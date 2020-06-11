@@ -110,40 +110,42 @@ def main(stdscr):
         stdscr.move(Y_OFFSET + y_pos * Y_MOVE, X_OFFSET + x_pos * X_MOVE)
     
         if current_player_id != MY_PLAYER_ID and RESPONS == True:
-          x = int(X_RESPONS) * X_MOVE + X_OFFSET
-          y = int(Y_RESPONS) * Y_MOVE + Y_OFFSET
-          draw(y, x, stdscr, player_id)
-          board[y_pos][x_pos] = P2_CH
-          RESPONS = False
-          current_player_id = MY_PLAYER_ID
-          stdscr.refresh()
+            x = int(X_RESPONS) * X_MOVE + X_OFFSET
+            y = int(Y_RESPONS) * Y_MOVE + Y_OFFSET
+            draw(y, x, stdscr, player_id)
+            board[y_pos][x_pos] = P2_CH
+            RESPONS = False
+            current_player_id = MY_PLAYER_ID
+            stdscr.refresh()
         if current_player_id == MY_PLAYER_ID:
-          #Move options
-          key = stdscr.getch()
-          if key == curses.KEY_UP or key == ord('w'):
-              y_pos = max(0, y_pos - 1)
-          elif key == curses.KEY_DOWN or key == ord('s'):
-              y_pos = min(2, y_pos + 1)
-          elif key == curses.KEY_LEFT or key == ord('a'):
-              x_pos = max(0, x_pos - 1)
-          elif key == curses.KEY_RIGHT or key == ord('d'):
-              x_pos = min(2, x_pos + 1)
-          elif key == ord('q') or key == ord('Q'):
-              break
-          elif key == ord(' ') and current_player_id == MY_PLAYER_ID:
-              # Update
-              y, x = stdscr.getyx() # put cursor position in x and y
-              client.publish("tictactoe/info", "x place: "+ str(x))
-              client.publish("tictactoe/info", "y place: "+ str(y))
-              if stdscr.inch(y, x) != ord(' '): #Check for Space
-                  continue
-              
-              draw(y, x, stdscr, player_id)
-              board[y_pos][x_pos] = P2_CH if player_id else P1_CH
-              
-              # Switch player
-              player_id = (player_id + 1) % 2
-              current_player_id = 0
+            stdscr.curs_set(1)
+            #Move options
+            key = stdscr.getch()
+            if key == curses.KEY_UP or key == ord('w'):
+                y_pos = max(0, y_pos - 1)
+            elif key == curses.KEY_DOWN or key == ord('s'):
+                y_pos = min(2, y_pos + 1)
+            elif key == curses.KEY_LEFT or key == ord('a'):
+                x_pos = max(0, x_pos - 1)
+            elif key == curses.KEY_RIGHT or key == ord('d'):
+                x_pos = min(2, x_pos + 1)
+            elif key == ord('q') or key == ord('Q'):
+                break
+            elif key == ord(' ') and current_player_id == MY_PLAYER_ID:
+                # Update
+                y, x = stdscr.getyx() # put cursor position in x and y
+                client.publish("tictactoe/info", "x place: "+ str(x))
+                client.publish("tictactoe/info", "y place: "+ str(y))
+                if stdscr.inch(y, x) != ord(' '): #Check for Space
+                    continue
+                
+                draw(y, x, stdscr, player_id)
+                board[y_pos][x_pos] = P2_CH if player_id else P1_CH
+                
+                # Switch player
+                player_id = (player_id + 1) % 2
+                current_player_id = 0
+                stdscr.curs_set(0)
 
             #stdscr.refresh()
             #stdscr.getkey()
