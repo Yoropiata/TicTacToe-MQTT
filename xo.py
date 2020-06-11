@@ -117,7 +117,7 @@ def main(stdscr):
           RESPONS = False
           current_player_id = MY_PLAYER_ID
           stdscr.refresh()
-        
+        if current_player_id == MY_PLAYER_ID:
           #Move options
           key = stdscr.getch()
           if key == curses.KEY_UP or key == ord('w'):
