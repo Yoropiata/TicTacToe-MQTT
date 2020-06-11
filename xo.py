@@ -76,6 +76,7 @@ def main(stdscr):
     #     time.sleep(0.1)
 
 
+    global LAST_MOVE
     while True:
         stdscr.move(Y_OFFSET + y_pos * Y_MOVE, X_OFFSET + x_pos * X_MOVE)
         if current_player_id == MY_PLAYER_ID:
@@ -84,6 +85,7 @@ def main(stdscr):
                 x = LAST_MOVE % 3
                 y = LAST_MOVE / 3
                 draw(Y_OFFSET + y, X_OFFSET + x, stdscr, opponent)
+                LAST_MOVE = 0
 
             #Move options
             key = stdscr.getch()
