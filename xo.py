@@ -29,7 +29,7 @@ def on_connect(client, userdata, flags, rc):
     client.publish("tictactoe/request/delegation","join")
 
 def on_message(client, userdata, msg):
-    global MY_PLAYER_ID, GAME_ID, RESPONS, X_RESPONS, Y_RESPONS
+    global MY_PLAYER_ID, GAME_ID, RESPONS, X_RESPONS, Y_RESPONS, current_player_id
     msg.payload = msg.payload.decode("utf-8")
     #print(msg.topic+" "+str(msg.payload))
     if msg.topic == "tictactoe/move/0":
@@ -41,6 +41,7 @@ def on_message(client, userdata, msg):
     elif msg.topic == "tictactoe/delegation":
         if MY_PLAYER_ID == 0:
             MY_PLAYER_ID = int(msg.payload)
+            current_player_id = int(msg.payload)
             client.subscribe("tictactoe/player/"+str(MY_PLAYER_ID))
             client.subscribe("tictactoe/player/"+str(MY_PLAYER_ID)+"/#")
     elif msg.topic == "tictactoe/victory":
