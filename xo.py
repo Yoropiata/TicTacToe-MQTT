@@ -16,6 +16,7 @@ X_OFFSET = 1
 Y_OFFSET = 4
 
 MY_PLAYER_ID = 0
+LAST_MOVE = 1
 
 
 def on_connect(client, userdata, flags, rc):
@@ -78,6 +79,12 @@ def main(stdscr):
     while True:
         stdscr.move(Y_OFFSET + y_pos * Y_MOVE, X_OFFSET + x_pos * X_MOVE)
         if current_player_id == MY_PLAYER_ID:
+            if LAST_MOVE != 0:
+                opponent = 0 if MY_PLAYER_ID == 1 else 1
+                x = LAST_MOVE % 3
+                y = LAST_MOVE / 3
+                draw(Y_OFFSET + y, X_OFFSET + x, stdscr, opponent)
+
             #Move options
             key = stdscr.getch()
             if key == curses.KEY_UP or key == ord('w'):
@@ -103,8 +110,6 @@ def main(stdscr):
                 
                 # Switch player
                 current_player_id = (current_player_id + 1) % 2
-        else:
-            print("IKKE MIN TUR!")
 
     stdscr.refresh()
     stdscr.getkey()
