@@ -16,7 +16,7 @@ X_OFFSET = 1
 Y_OFFSET = 4
 
 MY_PLAYER_ID = 0
-LAST_MOVE = 1
+LAST_MOVE = 5
 
 
 def on_connect(client, userdata, flags, rc):
