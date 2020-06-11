@@ -118,7 +118,7 @@ def main(stdscr):
             current_player_id = MY_PLAYER_ID
             stdscr.refresh()
         if current_player_id == MY_PLAYER_ID:
-            stdscr.curs_set(1)
+            curses.curs_set(1)
             #Move options
             key = stdscr.getch()
             if key == curses.KEY_UP or key == ord('w'):
@@ -141,11 +141,12 @@ def main(stdscr):
                 
                 draw(y, x, stdscr, player_id)
                 board[y_pos][x_pos] = P2_CH if player_id else P1_CH
+                stdscr.refresh()
                 
                 # Switch player
                 player_id = (player_id + 1) % 2
                 current_player_id = 0
-                stdscr.curs_set(0)
+                curses.curs_set(0)
 
             #stdscr.refresh()
             #stdscr.getkey()
