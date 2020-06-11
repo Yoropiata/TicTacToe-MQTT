@@ -83,7 +83,7 @@ def main(stdscr):
             if LAST_MOVE != 0:
                 opponent = 0 if MY_PLAYER_ID == 1 else 1
                 x = LAST_MOVE % 3
-                y = LAST_MOVE / 3
+                y = int(LAST_MOVE / 3)
                 draw(Y_OFFSET + y, X_OFFSET + x, stdscr, opponent)
                 LAST_MOVE = 0
 
