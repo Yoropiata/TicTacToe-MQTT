@@ -95,8 +95,6 @@ def main(stdscr):
                 y_pos = min(2, y_pos + 1)
             elif key == curses.KEY_LEFT or key == ord('a'):
                 x_pos = max(0, x_pos - 1)
-                print(x_pos)
-                print(y_pos)
             elif key == curses.KEY_RIGHT or key == ord('d'):
                 x_pos = min(2, x_pos + 1)
             elif key == ord('q') or key == ord('Q'):
