@@ -8,6 +8,8 @@ import paho.mqtt.client as mqtt
 #Player characters
 P1_CH = 'X'
 P2_CH = 'O'
+PLAYER_CH = ''
+OPPONENT_CH = ''
 #Move field
 X_MOVE = 4
 Y_MOVE = 2
@@ -18,10 +20,13 @@ Y_OFFSET = 4
 RESPONS = False
 X_RESPONS = 1
 Y_RESPONS = 1
+MOVE = 0
+IGNORE = 0
 
 GAME_ID = 0
 MY_PLAYER_ID = 0
 current_player_id = 1
+player_id = 0
 
 def on_connect(client, userdata, flags, rc):
     # print("Connected with result code "+str(rc))
@@ -29,7 +34,7 @@ def on_connect(client, userdata, flags, rc):
     client.publish("tictactoe/request/delegation","join")
 
 def on_message(client, userdata, msg):
-    global MY_PLAYER_ID, GAME_ID, RESPONS, X_RESPONS, Y_RESPONS, current_player_id
+    global MY_PLAYER_ID, GAME_ID, RESPONS, X_RESPONS, Y_RESPONS, MOVE, IGNORE
     msg.payload = msg.payload.decode("utf-8")
     #print(msg.topic+" "+str(msg.payload))
     if msg.topic == "tictactoe/move/0":
@@ -41,7 +46,7 @@ def on_message(client, userdata, msg):
     elif msg.topic == "tictactoe/delegation":
         if MY_PLAYER_ID == 0:
             MY_PLAYER_ID = int(msg.payload)
-            current_player_id = int(msg.payload)
+            current_player_id = MY_PLAYER_ID
             client.subscribe("tictactoe/player/"+str(MY_PLAYER_ID))
             client.subscribe("tictactoe/player/"+str(MY_PLAYER_ID)+"/#")
     elif msg.topic == "tictactoe/victory":
@@ -60,11 +65,14 @@ def on_message(client, userdata, msg):
     #Action
     elif msg.topic == "tictactoe/server/"+str(GAME_ID)+"/move":
         client.publish("tictactoe/info", "info: "+ str(msg.payload))
-        x = int(msg.payload) % 3
-        y = (int(msg.payload) - x)/3
+        MOVE = int(msg.payload)
+        x = MOVE % 3
+        y = (MOVE - x)/3
         X_RESPONS = x
         Y_RESPONS = y
         RESPONS = True
+    elif msg.topic == "tictactoe/server/"+str(GAME_ID)+"/move/"+str(MY_PLAYER_ID):
+        IGNORE = int(msg.payload)
 
 
 #Draw Board
@@ -84,7 +92,7 @@ def draw(y, x, stdscr, player_id):
 
 #stdscr - default window
 def main(stdscr):
-    global RESPONS, current_player_id, MY_PLAYER_ID
+    global RESPONS, current_player_id, MY_PLAYER_ID, PLAYER_CH, OPPONENT_CH, current_player_id, player_id
     # Clear screen
     # stdscr.clear()
 
@@ -95,8 +103,9 @@ def main(stdscr):
     client.connect("93.166.88.200", 1883, 60)
     client.loop_start()
 
-    #while GAME_ID != 0:
-      #time.sleep(0.1)
+
+    PLAYER_CH = P1_CH if MY_PLAYER_ID %2 else P2_CH
+    OPPONENT_CH = P2_CH if MY_PLAYER_ID %2 else P1_CH
     
     draw_board(stdscr)
     #player who starts
@@ -109,48 +118,49 @@ def main(stdscr):
           
     while True:
         stdscr.move(Y_OFFSET + y_pos * Y_MOVE, X_OFFSET + x_pos * X_MOVE)
-    
+        
+        if IGNORE == MOVE:
+          RESPONS = False
+          current_player_id = 0
+        
         if current_player_id != MY_PLAYER_ID and RESPONS == True:
+            player_id = 0
             x = int(X_RESPONS) * X_MOVE + X_OFFSET
             y = int(Y_RESPONS) * Y_MOVE + Y_OFFSET
             draw(y, x, stdscr, player_id)
-            board[y_pos][x_pos] = P2_CH
+            board[y_pos][x_pos] = OPPONENT_CH
             RESPONS = False
             current_player_id = MY_PLAYER_ID
             stdscr.refresh()
-        if current_player_id == MY_PLAYER_ID:
-            curses.curs_set(1)
-            #Move options
-            key = stdscr.getch()
-            if key == curses.KEY_UP or key == ord('w'):
-                y_pos = max(0, y_pos - 1)
-            elif key == curses.KEY_DOWN or key == ord('s'):
-                y_pos = min(2, y_pos + 1)
-            elif key == curses.KEY_LEFT or key == ord('a'):
-                x_pos = max(0, x_pos - 1)
-            elif key == curses.KEY_RIGHT or key == ord('d'):
-                x_pos = min(2, x_pos + 1)
-            elif key == ord('q') or key == ord('Q'):
-                break
-            elif key == ord(' ') and current_player_id == MY_PLAYER_ID:
-                # Update
-                y, x = stdscr.getyx() # put cursor position in x and y
-                client.publish("tictactoe/info", "x place: "+ str(x))
-                client.publish("tictactoe/info", "y place: "+ str(y))
-                if stdscr.inch(y, x) != ord(' '): #Check for Space
-                    continue
-                
-                draw(y, x, stdscr, player_id)
-                board[y_pos][x_pos] = P2_CH if player_id else P1_CH
-                stdscr.refresh()
-                
-                # Switch player
-                player_id = (player_id + 1) % 2
-                current_player_id = 0
-                curses.curs_set(0)
 
-            #stdscr.refresh()
-            #stdscr.getkey()
+        #Move options
+        key = stdscr.getch()
+        if key == curses.KEY_UP or key == ord('w'):
+            y_pos = max(0, y_pos - 1)
+        elif key == curses.KEY_DOWN or key == ord('s'):
+            y_pos = min(2, y_pos + 1)
+        elif key == curses.KEY_LEFT or key == ord('a'):
+            x_pos = max(0, x_pos - 1)
+        elif key == curses.KEY_RIGHT or key == ord('d'):
+            x_pos = min(2, x_pos + 1)
+        elif key == ord('q') or key == ord('Q'):
+            break
+        elif key == ord(' ') and current_player_id == MY_PLAYER_ID:
+            # Update
+            y, x = stdscr.getyx() # put cursor position in x and y
+            if stdscr.inch(y, x) != ord(' '): #Check for Space
+                continue
+            
+            player_id = 1
+            draw(y, x, stdscr, player_id)
+            board[y_pos][x_pos] = PLAYER_CH
+            pos = y_pos * 3 + x_pos
+            client.publish("tictactoe/server/"+str(GAME_ID)+"/move", str(pos))
+            client.publish("tictactoe/server/"+str(GAME_ID)+"/move/"+str(MY_PLAYER_ID), str(pos))
+            
+            # Switch player
+            player_id = (player_id + 1) % 2
+            current_player_id = 0
         
     stdscr.refresh()
     stdscr.getkey()
