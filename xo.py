@@ -21,7 +21,8 @@ Y_RESPONS = 1
 
 GAME_ID = 0
 MY_PLAYER_ID = 0
-current_player_id = 1
+OPPONENT_PLAYER_ID = 0
+CURRENT_PLAYER_ID = 1
 
 def on_connect(client, userdata, flags, rc):
     # print("Connected with result code "+str(rc))
@@ -29,7 +30,7 @@ def on_connect(client, userdata, flags, rc):
     client.publish("tictactoe/request/delegation","join")
 
 def on_message(client, userdata, msg):
-    global MY_PLAYER_ID, GAME_ID, RESPONS, X_RESPONS, Y_RESPONS, current_player_id
+    global MY_PLAYER_ID, GAME_ID, RESPONS, X_RESPONS, Y_RESPONS, CURRENT_PLAYER_ID
     msg.payload = msg.payload.decode("utf-8")
     #print(msg.topic+" "+str(msg.payload))
     if msg.topic == "tictactoe/move/0":
@@ -41,7 +42,7 @@ def on_message(client, userdata, msg):
     elif msg.topic == "tictactoe/delegation":
         if MY_PLAYER_ID == 0:
             MY_PLAYER_ID = int(msg.payload)
-            current_player_id = int(msg.payload)
+            CURRENT_PLAYER_ID = int(msg.payload)
             client.subscribe("tictactoe/player/"+str(MY_PLAYER_ID))
             client.subscribe("tictactoe/player/"+str(MY_PLAYER_ID)+"/#")
     elif msg.topic == "tictactoe/victory":
@@ -58,7 +59,7 @@ def on_message(client, userdata, msg):
         client.publish("tictactoe/connected", str(MY_PLAYER_ID))
         
     #Action
-    elif msg.topic == "tictactoe/server/"+str(GAME_ID)+"/move":
+    elif msg.topic == "tictactoe/server/"+str(GAME_ID)+"/player/"+str(OPPONENT_PLAYER_ID)+"move":
         client.publish("tictactoe/info", "info: "+ str(msg.payload))
         x = int(msg.payload) % 3
         y = (int(msg.payload) - x)/3
@@ -80,11 +81,11 @@ def draw_board(stdscr):
 
 #Draw player char
 def draw(y, x, stdscr, player_id):
-    stdscr.addch(y, x, P2_CH if player_id else P1_CH)
+    stdscr.addch(y, x, P2_CH if player_id % 2 else P1_CH)
 
 #stdscr - default window
 def main(stdscr):
-    global RESPONS, current_player_id, MY_PLAYER_ID
+    global RESPONS, CURRENT_PLAYER_ID, MY_PLAYER_ID
     # Clear screen
     # stdscr.clear()
 
@@ -109,19 +110,26 @@ def main(stdscr):
           
     while True:
         stdscr.move(Y_OFFSET + y_pos * Y_MOVE, X_OFFSET + x_pos * X_MOVE)
-    
-        if current_player_id != MY_PLAYER_ID and RESPONS == True:
+
+        #Check for opponent move
+        if CURRENT_PLAYER_ID != MY_PLAYER_ID and RESPONS == True:
             x = int(X_RESPONS) * X_MOVE + X_OFFSET
             y = int(Y_RESPONS) * Y_MOVE + Y_OFFSET
             draw(y, x, stdscr, player_id)
             board[y_pos][x_pos] = P2_CH
             RESPONS = False
-            current_player_id = MY_PLAYER_ID
+            CURRENT_PLAYER_ID = MY_PLAYER_ID
             stdscr.refresh()
-        if current_player_id == MY_PLAYER_ID:
+        
+        #Check for my move.
+        if CURRENT_PLAYER_ID == MY_PLAYER_ID:
+            #Show cursor
             curses.curs_set(1)
-            #Move options
+            
+            #Get key char
             key = stdscr.getch()
+
+            #Check keystrokes
             if key == curses.KEY_UP or key == ord('w'):
                 y_pos = max(0, y_pos - 1)
             elif key == curses.KEY_DOWN or key == ord('s'):
@@ -132,9 +140,8 @@ def main(stdscr):
                 x_pos = min(2, x_pos + 1)
             elif key == ord('q') or key == ord('Q'):
                 break
-            elif key == ord(' ') and current_player_id == MY_PLAYER_ID:
-                # Update
-                y, x = stdscr.getyx() # put cursor position in x and y
+            elif key == ord(' ') and CURRENT_PLAYER_ID == MY_PLAYER_ID:
+                y, x = stdscr.getyx()
                 client.publish("tictactoe/info", "x place: "+ str(x))
                 client.publish("tictactoe/info", "y place: "+ str(y))
                 if stdscr.inch(y, x) != ord(' '): #Check for Space
@@ -146,7 +153,7 @@ def main(stdscr):
                 
                 # Switch player
                 player_id = (player_id + 1) % 2
-                current_player_id = 0
+                CURRENT_PLAYER_ID = 0
                 curses.curs_set(0)
 
             #stdscr.refresh()
