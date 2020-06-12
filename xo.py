@@ -32,40 +32,38 @@ def on_connect(client, userdata, flags, rc):
 def on_message(client, userdata, msg):
     global MY_PLAYER_ID, GAME_ID, RESPONS, X_RESPONS, Y_RESPONS, CURRENT_PLAYER_ID
     msg.payload = msg.payload.decode("utf-8")
-    #print(msg.topic+" "+str(msg.payload))
-    if msg.topic == "tictactoe/move/0":
-        print("Placing an X")
-    elif msg.topic == "tictactoe/move/1":
-        print("Placing an O")
-    
-    #Give player ID and subscribe to player
-    elif msg.topic == "tictactoe/delegation":
+    #Get player ID
+    if msg.topic == "tictactoe/delegation":
         if MY_PLAYER_ID == 0:
             MY_PLAYER_ID = int(msg.payload)
-            CURRENT_PLAYER_ID = int(msg.payload)
-            client.subscribe("tictactoe/player/"+str(MY_PLAYER_ID))
-            client.subscribe("tictactoe/player/"+str(MY_PLAYER_ID)+"/#")
-    elif msg.topic == "tictactoe/victory":
+            client.subscribe("tictactoe/delegation/" + str(MY_PLAYER_ID))
+
+    #Get game lobby
+    elif msg.topic == "tictactoe/delegation/" + str(MY_PLAYER_ID):
+        if GAME_ID == 0:
+            GAME_ID == int(msg.payload)
+    
+    elif msg.topic == "tictactoe/server/"+str(GAME_ID)+"/victory":
         print(msg.payload)
         
     #Get game server
     elif msg.topic == "tictactoe/player/"+str(MY_PLAYER_ID)+"/game":
         GAME_ID = int(msg.payload)
         client.subscribe("tictactoe/server/"+str(GAME_ID)+"/#")
-        client.publish("tictactoe/info", "game id : "+ str(GAME_ID))
-        
-    #Still connected?
-    elif msg.topic == "tictactoe/player/"+str(MY_PLAYER_ID)+"/connected":
-        client.publish("tictactoe/connected", str(MY_PLAYER_ID))
+        # client.publish("tictactoe/info", "game id : "+ str(GAME_ID))
         
     #Action
-    elif msg.topic == "tictactoe/server/"+str(GAME_ID)+"/player/"+str(OPPONENT_PLAYER_ID)+"move":
-        client.publish("tictactoe/info", "info: "+ str(msg.payload))
-        x = int(msg.payload) % 3
-        y = (int(msg.payload) - x)/3
+    elif msg.topic == "tictactoe/server/"+str(GAME_ID)+"/move/"+str(OPPONENT_PLAYER_ID):
+        # client.publish("tictactoe/info", "info: "+ str(msg.payload))
+        x = msg.payload % 3
+        y = (msg.payload - x)/3
         X_RESPONS = x
         Y_RESPONS = y
         RESPONS = True
+
+    #Still connected check
+    elif msg.topic == "tictactoe/player/"+str(MY_PLAYER_ID)+"/connected":
+        client.publish("tictactoe/connected", str(MY_PLAYER_ID))
 
 
 #Draw Board
@@ -85,7 +83,7 @@ def draw(y, x, stdscr, player_id):
 
 #stdscr - default window
 def main(stdscr):
-    global RESPONS, CURRENT_PLAYER_ID, MY_PLAYER_ID
+    global RESPONS, CURRENT_PLAYER_ID, MY_PLAYER_ID, OPPONENT_PLAYER_ID
     # Clear screen
     # stdscr.clear()
 
@@ -95,9 +93,6 @@ def main(stdscr):
 
     client.connect("93.166.88.200", 1883, 60)
     client.loop_start()
-
-    #while GAME_ID != 0:
-      #time.sleep(0.1)
     
     draw_board(stdscr)
     #player who starts
@@ -112,17 +107,17 @@ def main(stdscr):
         stdscr.move(Y_OFFSET + y_pos * Y_MOVE, X_OFFSET + x_pos * X_MOVE)
 
         #Check for opponent move
-        if CURRENT_PLAYER_ID != MY_PLAYER_ID and RESPONS == True:
+        if CURRENT_PLAYER_ID == OPPONENT_PLAYER_ID and RESPONS == True:
             x = int(X_RESPONS) * X_MOVE + X_OFFSET
             y = int(Y_RESPONS) * Y_MOVE + Y_OFFSET
             draw(y, x, stdscr, player_id)
-            board[y_pos][x_pos] = P2_CH
+            board[y_pos][x_pos] = P1_CH if OPPONENT_PLAYER_ID % 2 else P2_CH
             RESPONS = False
             CURRENT_PLAYER_ID = MY_PLAYER_ID
             stdscr.refresh()
         
         #Check for my move.
-        if CURRENT_PLAYER_ID == MY_PLAYER_ID:
+        elif CURRENT_PLAYER_ID == MY_PLAYER_ID:
             #Show cursor
             curses.curs_set(1)
             
@@ -148,12 +143,14 @@ def main(stdscr):
                     continue
                 
                 draw(y, x, stdscr, player_id)
-                board[y_pos][x_pos] = P2_CH if player_id else P1_CH
+                board[y_pos][x_pos] = P2_CH if CURRENT_PLAYER_ID % 2 else P1_CH
                 stdscr.refresh()
+
+                pos = y_pos * 3 + x_pos
+                client.publish("tictactoe/server/"+str(GAME_ID)+"/move/"+str(MY_PLAYER_ID), str(pos))
                 
                 # Switch player
-                player_id = (player_id + 1) % 2
-                CURRENT_PLAYER_ID = 0
+                CURRENT_PLAYER_ID = OPPONENT_PLAYER_ID
                 curses.curs_set(0)
 
             #stdscr.refresh()
