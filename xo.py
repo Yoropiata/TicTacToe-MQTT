@@ -27,7 +27,7 @@ CURRENT_PLAYER_ID = 1
 def on_connect(client, userdata, flags, rc):
     # print("Connected with result code "+str(rc))
     client.subscribe("tictactoe/delegation")
-    client.publish("tictactoe/request/delegation","join")
+    client.publish("tictactoe/request/playerid","join")
 
 def on_message(client, userdata, msg):
     global MY_PLAYER_ID, GAME_ID, RESPONS, X_RESPONS, Y_RESPONS, CURRENT_PLAYER_ID
@@ -37,6 +37,7 @@ def on_message(client, userdata, msg):
         if MY_PLAYER_ID == 0:
             MY_PLAYER_ID = int(msg.payload)
             client.subscribe("tictactoe/delegation/" + str(MY_PLAYER_ID))
+            client.publish("tictactoe/request/gameserver", str(MY_PLAYER_ID))
 
     #Get game lobby
     elif msg.topic == "tictactoe/delegation/" + str(MY_PLAYER_ID):
