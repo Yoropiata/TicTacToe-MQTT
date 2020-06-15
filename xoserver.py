@@ -29,12 +29,16 @@ def on_message(client, userdata, msg):
 
         if len(GAME_SERVERS) > 0:
             #Check for game servers that need a player2.
+            did_find_open_gameserver = False
             for i in range(len(GAME_SERVERS)):
                 game_server = GAME_SERVERS[i]
                 if game_server.player2 is None:
                     game_server.player2 = user_id
+                    did_find_open_gameserver = True
+                    break
             #Create a new game server
-            GAME_SERVERS.append(GameServer(user_id))
+            if not did_find_open_gameserver:
+                GAME_SERVERS.append(GameServer(user_id))
         else:
             #Create a new game server
             GAME_SERVERS.append(GameServer(user_id))
