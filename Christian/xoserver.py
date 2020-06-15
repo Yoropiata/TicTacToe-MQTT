@@ -8,7 +8,11 @@ GAME_SERVER = list()
 PLAYERS = list()
 board = [list('   ') for _ in range(3)]
 x_pos = 0
-y_pos = 0
+y_pos = 0== board[1][1] == board [2][0]:
+        return True
+
+    return False     
+
 
 def check_victory(board, y, x):
     #check if previous move caused a win on horizontal line
@@ -24,14 +28,7 @@ def check_victory(board, y, x):
         return True
 
     #check if previous move was on the secondary diagonal and caused a win
-    if x + y == 2 and board[0][2] == board[1][1] == board [2][0]:
-        return True
-
-    return False     
-
-def check(board, y, x, ch):
-    if check_victory(board, int(y_pos), int(x_pos)):
-                client.publish("tictactoe/server/", "Win: "+ str(ch))
+    if x + y == 2 and board[0][2] r/", "Win: "+ str(ch))
 
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
