@@ -35,14 +35,8 @@ def on_connect(client, userdata, flags, rc):
 def on_message(client, userdata, msg):
     global MY_PLAYER_ID, GAME_ID, RESPONS, X_RESPONS, Y_RESPONS, MOVE, IGNORE
     msg.payload = msg.payload.decode("utf-8")
-    #print(msg.topic+" "+str(msg.payload))
-    if msg.topic == "tictactoe/move/0":
-        print("Placing an X")
-    elif msg.topic == "tictactoe/move/1":
-        print("Placing an O")
-    
     #Give player ID and subscribe to player
-    elif msg.topic == "tictactoe/delegation":
+    if msg.topic == "tictactoe/delegation":
         if MY_PLAYER_ID == 0:
             MY_PLAYER_ID = int(msg.payload)
             current_player_id = MY_PLAYER_ID
@@ -128,6 +122,7 @@ def main(stdscr):
             draw(y, x, stdscr, OPPONENT_CH)
             board[y_pos][x_pos] = OPPONENT_CH
             current_player_id = MY_PLAYER_ID
+            stdscr.addstr(7, 0, 'Placed OPPONENT element')
             stdscr.refresh()
             RESPONS = False
 
@@ -148,7 +143,8 @@ def main(stdscr):
             y, x = stdscr.getyx() # put cursor position in x and y
             if stdscr.inch(y, x) != ord(' '): #Check for Space
                 continue
-            
+
+            stdscr.addstr(6, 0, 'Placed MY element')
             draw(y, x, stdscr, PLAYER_CH)
             board[y_pos][x_pos] = PLAYER_CH
             pos = y_pos * 3 + x_pos
@@ -157,6 +153,12 @@ def main(stdscr):
             # Switch player
             RESPONS = False
             current_player_id = 0
+            stdscr.refresh()
+        else:
+            stdscr.addstr(9, 0, "KeyID: " + str(key) + ", Key: " + str(ord(chr(key))) )
+            stdscr.refresh()
+
+            
         
     stdscr.refresh()
     stdscr.getkey()
