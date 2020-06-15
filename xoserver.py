@@ -2,9 +2,10 @@
 
 import paho.mqtt.client as mqtt
 import time
+from game_server_type import GameServer
 
 ID = 1
-GAME_SERVER = list()
+GAME_SERVERS = list()
 PLAYERS = list()
 #def move()
 
@@ -15,20 +16,34 @@ def on_connect(client, userdata, flags, rc):
     client.subscribe("tictactoe/connected")
 
 def on_message(client, userdata, msg):
-    global ID
+    global ID, GAME_SERVERS
     msg.payload = msg.payload.decode("utf-8")
-    if msg.topic == "tictactoe/move/0":
-        print("Placing an X")
-    elif msg.topic == "tictactoe/move/1":
-        print("Placing an O")
-    elif msg.topic == "tictactoe/request/delegation":
-        client.publish("tictactoe/delegation", str(ID))
-        print("request/delegation" + " " +  str(ID))
-        PLAYERS.append(int(ID))
-        time.sleep(2)
-        print("tictactoe/player/"+str(ID)+"/game", 1)
-        client.publish("tictactoe/player/"+str(ID)+"/game", 1)
+    if msg.topic == "tictactoe/request/playerid":
+        user_id = ID
         ID += 1
+        client.publish("tictactoe/delegation", str(user_id))
+        print("request/delegation" + " " +  str(user_id))
+        PLAYERS.append(int(user_id))
+
+        if len(GAME_SERVERS > 0):
+            #Check for game servers that need a player2.
+            for i in range(len(GAME_SERVERS)):
+                game_server = GAME_SERVERS[i]
+                if game_server.player2 == 0:
+                    game_server.player2 = user_id
+                    break
+            #Create a new game server
+            GAME_SERVERS.append(GameServer(user_id))
+        else:
+            #Create a new game server
+            GAME_SERVERS.append(GameServer(user_id))
+    elif msg.topic == "tictactoe/request/gameserver":
+        
+        client.publish("tictactoe/delegation/game", str(ID))
+        PLAYERS.append(int(ID))
+        client.publish("tictactoe/player/"+str(ID)+"/game", 1)#str(ID)
+    # elif msg.topic == "tictactoe/connected":
+    #    PLAYERS.append(int(msg.payload))
        
 
 client = mqtt.Client()

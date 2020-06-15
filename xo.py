@@ -30,7 +30,7 @@ player_id = 0
 
 def on_connect(client, userdata, flags, rc):
     client.subscribe("tictactoe/delegation")
-    client.publish("tictactoe/request/delegation","join")
+    client.publish("tictactoe/request/playerid","join")
 
 def on_message(client, userdata, msg):
     global MY_PLAYER_ID, GAME_ID, RESPONS, X_RESPONS, Y_RESPONS, MOVE, IGNORE
@@ -48,6 +48,16 @@ def on_message(client, userdata, msg):
             current_player_id = MY_PLAYER_ID
             client.subscribe("tictactoe/player/"+str(MY_PLAYER_ID)+"/#")
             client.subscribe("tictactoe/player/"+str(MY_PLAYER_ID))
+            client.subscribe("tictactoe/delegation/" + str(MY_PLAYER_ID))
+            client.publish("tictactoe/request/gameserver", str(MY_PLAYER_ID))
+
+    #Get game lobby
+    elif msg.topic == "tictactoe/delegation/" + str(MY_PLAYER_ID):
+        if GAME_ID == 0:
+            GAME_ID == int(msg.payload)
+    
+    elif msg.topic == "tictactoe/server/"+str(GAME_ID)+"/victory":
+        print(msg.payload)
         
     #Get game server
     elif msg.topic == "tictactoe/player/"+str(MY_PLAYER_ID)+"/game":
